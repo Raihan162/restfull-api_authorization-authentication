@@ -2,6 +2,8 @@ const Router = require('express').Router();
 
 const Validation = require('../helpers/validationHelper');
 const StudentHelper = require('../helpers/studentHelper');
+const GeneralHelper = require('../helpers/generalHelper');
+const Middleware = require('../middleware/studentMiddleware');
 
 const listStudent = async (request, reply) => {
     try {
@@ -90,9 +92,40 @@ const updateStudent = async (request, reply) => {
     }
 };
 
+const loginStudent = async (request, reply) => {
+    try {
+
+        const { email, password } = request.body;
+        const response = await StudentHelper.loginStudent(email, password);
+
+        return reply.send({
+            message: 'Login Success!',
+            response
+        });
+    } catch (err) {
+        return reply.send(GeneralHelper.errorResponse(err));
+    }
+};
+
+const getStudentByID = async (request, reply) => {
+    try {
+        const dataToken = request.body.studentToken
+
+        const response = await StudentHelper.detailStudent(dataToken)
+        return reply.send({
+            message: 'Get Detail Student Succeess!',
+            response
+        })
+    } catch (err) {
+        return reply.send(GeneralHelper.errorResponse(err));
+    }
+}
+
 Router.get('/list', listStudent);
-Router.post('/add', addStudent);
-Router.delete('/delete', deleteStudent)
-Router.patch('/update', updateStudent)
+Router.post('/register', addStudent);
+Router.delete('/delete', deleteStudent);
+Router.patch('/update', updateStudent);
+Router.post('/login', loginStudent);
+Router.get('/detail-student', Middleware.validateToken, getStudentByID);
 
 module.exports = Router;
