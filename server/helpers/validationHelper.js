@@ -5,7 +5,9 @@ const studentAddValidation = (data) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     major: Joi.string().required(),
-    contact: Joi.number().required()
+    contact: Joi.number().required(),
+    email: Joi.string().required(),
+    password: Joi.string().required()
   });
 
   if (schema.validate(data).error) {
