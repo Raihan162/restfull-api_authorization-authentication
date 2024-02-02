@@ -71,10 +71,10 @@ const deleteStudent = async (request, reply) => {
 
 const updateStudent = async (request, reply) => {
     try {
-        const { id } = request.query;
-        const { name, major, contact } = request.body;
+        const { name, major, contact, email } = request.body;
+        const dataToken = request.body.studentToken;
 
-        const response = await StudentHelper.updateStudent(id, name, major, contact);
+        const response = await StudentHelper.updateStudent(name, major, contact, email, dataToken);
 
         return reply
             .status(200)
@@ -123,7 +123,7 @@ const getStudentByID = async (request, reply) => {
 
 const changePassword = async (request, reply) => {
     try {
-        const { old_password, new_password, new_confirm_password } = request.body
+        const { old_password, new_password, new_confirm_password } = request.body;
         const dataToken = request.body.studentToken;
         const response = await StudentHelper.changePassword(dataToken, old_password, new_password, new_confirm_password);
 
@@ -139,7 +139,7 @@ const changePassword = async (request, reply) => {
 Router.get('/list', listStudent);
 Router.post('/register', addStudent);
 Router.delete('/delete', deleteStudent);
-Router.patch('/update', updateStudent);
+Router.patch('/update', Middleware.validateToken, updateStudent);
 Router.post('/login', loginStudent);
 Router.get('/detail-student', Middleware.validateToken, getStudentByID);
 Router.patch('/change-password', Middleware.validateToken, changePassword)

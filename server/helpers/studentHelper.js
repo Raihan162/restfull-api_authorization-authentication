@@ -62,31 +62,32 @@ const addStudent = async (dataObject) => {
     };
 };
 
-const updateStudent = async (id, name, major, contact) => {
+const updateStudent = async (name, major, contact, email, dataToken) => {
     try {
         const checkStudent = await db.students.findOne({
             where: {
-                id: id
+                id: dataToken.id
             }
         });
 
         if (!checkStudent) {
-            throw new Error('Student doesn`t exist')
+            return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'));
         };
 
         await db.students.update({
             name: name ? name : checkStudent?.dataValues?.name,
             major: major ? major : checkStudent?.dataValues?.major,
-            contact: contact ? contact : checkStudent?.dataValues?.contact
+            contact: contact ? contact : checkStudent?.dataValues?.contact,
+            email: email ? email : checkStudent?.dataValues?.email
         }, {
             where: {
-                id: id
+                id: checkStudent?.id
             }
         });
 
         return Promise.resolve([]);
     } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(GeneralHelper.errorResponse(error));
     };
 };
 
@@ -176,7 +177,7 @@ const changePassword = async (dataToken, old_password, new_password, new_confirm
         if (!checkPass) {
             return Promise.reject(Boom.badRequest('WRONG_OLD_PASSWORD'));
         };
-        if(old_password === new_password){
+        if (old_password === new_password) {
             return Promise.reject(Boom.badRequest('NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_THE_OLD_PASSWORD'))
         }
         if (new_password !== new_confirm_password) {
