@@ -65,9 +65,10 @@ const deleteRegistration = async (request, reply) => {
 const updateRegistration = async (request, reply) => {
     try {
         const { id } = request.query;
-        const { students_id, courses_id } = request.body;
+        const { courses_id } = request.body;
+        const dataToken = request.body.studentToken;
 
-        const response = await RegistrationHelper.updateRegistration(id, students_id, courses_id);
+        const response = await RegistrationHelper.updateRegistration(id, dataToken, courses_id);
 
         return reply
             .status(200)
@@ -76,18 +77,13 @@ const updateRegistration = async (request, reply) => {
                 response
             });
     } catch (error) {
-        return reply
-            .status(400)
-            .send({
-                message: 'Update Registration Failed!',
-                error: error?.message
-            });
+        return reply.send(GeneralHelper.errorResponse(error));
     }
 };
 
 Router.post('/add', Middleware.validateToken, addRegistration);
 Router.get('/list', getRegistration);
 Router.delete('/delete', deleteRegistration);
-Router.patch('/update', updateRegistration);
+Router.patch('/update', Middleware.validateToken, updateRegistration);
 
 module.exports = Router;

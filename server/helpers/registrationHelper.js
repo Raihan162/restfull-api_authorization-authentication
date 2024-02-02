@@ -87,7 +87,7 @@ const deleteRegistration = async (id) => {
     };
 };
 
-const updateRegistration = async (id, students_id, courses_id) => {
+const updateRegistration = async (id, dataToken, courses_id) => {
     try {
         const checkRegistration = await db.registrations.findOne({
             where: {
@@ -99,16 +99,14 @@ const updateRegistration = async (id, students_id, courses_id) => {
             return Promise.reject(Boom.badRequest('REGISTRATION_NOT_FOUND'));
         };
 
-        if (students_id) {
-            const checkStudent = await db.students.findOne({
-                where: {
-                    id: students_id
-                }
-            });
+        const checkStudent = await db.students.findOne({
+            where: {
+                id: dataToken?.id
+            }
+        });
 
-            if (!checkStudent) {
-                return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'));
-            };
+        if (!checkStudent) {
+            return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'));
         };
 
 
@@ -125,7 +123,7 @@ const updateRegistration = async (id, students_id, courses_id) => {
         };
 
         await db.registrations.update({
-            students_id: students_id ? students_id : checkRegistration?.dataValues.id,
+            students_id: checkRegistration?.dataValues.id,
             courses_id: courses_id ? courses_id : checkRegistration?.dataValues.id
         }, {
             where: {
