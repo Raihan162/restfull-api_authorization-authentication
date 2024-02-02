@@ -1,6 +1,29 @@
-const { sequelize } = require('../../models')
+const Boom = require('boom');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const _ = require('lodash');
 
-const db = require('../../models/index')
+const db = require('../../models');
+const GeneralHelper = require('../helpers/generalHelper');
+
+const jwtSecretToken = 'super_strong_key';
+const jwtExpiresIn = '24h';
+const salt = bcrypt.genSaltSync(10);
+
+// eslint-disable-next-line arrow-body-style
+const __hashPassword = (password) => {
+    return bcrypt.hashSync(password, salt);
+}
+
+// eslint-disable-next-line arrow-body-style
+const __comparePassword = (payloadPass, dbPass) => {
+    return bcrypt.compareSync(payloadPass, dbPass);
+}
+
+// eslint-disable-next-line arrow-body-style
+const __generateToken = (data) => {
+    return jwt.sign(data, jwtSecretToken, { expiresIn: jwtExpiresIn });
+}
 
 const getStudentList = async () => {
     try {
@@ -13,16 +36,27 @@ const getStudentList = async () => {
 };
 
 const addStudent = async (dataObject) => {
-    const { name, major, contact } = dataObject;
-    
+    const { name, major, contact, email, password } = dataObject;
+
     try {
-        const response = await db.students.create({
-            name: name,
-            major: major,
-            contact: contact
+        const checkEmail = await db.students.findOne({
+            where: { email }
+        });
+        if (!_.isEmpty(checkEmail)) {
+            return Promise.reject(Boom.badRequest('Email already registered'))
+        };
+
+        const hashedPass = __hashPassword(password);
+
+        await db.students.create({
+            name,
+            major,
+            contact,
+            email,
+            password: hashedPass
         });
 
-        return Promise.resolve(response);
+        return Promise.resolve(true);
     } catch (error) {
         return Promise.reject(error);
     };
@@ -80,9 +114,53 @@ const deleteStudent = async (id) => {
     };
 };
 
+const loginStudent = async (email, password) => {
+    try {
+        const student = await db.students.findOne({
+            where: { email }
+        });
+        if (_.isEmpty(student)) {
+            return Promise.reject(Boom.notFound('STUDENT_NOT_FOUND'));
+        };
+
+        const isPassMatched = __comparePassword(password, student.password);
+        console.log(isPassMatched)
+        if (!isPassMatched) {
+            return Promise.reject(Boom.badRequest('WRONG_CREDENTIALS'));
+        };
+
+        const token = __generateToken({
+            id: student.id
+        })
+
+        return Promise.resolve({ token })
+    } catch (error) {
+        return Promise.reject(GeneralHelper.errorResponse(error));
+    }
+};
+
+const detailStudent = async (dataToken) => {
+    try {
+        const student = await db.students.findOne({
+            where: {
+                id: dataToken.id
+            }
+        });
+        if (!student) {
+            return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'))
+        }
+
+        return Promise.resolve(student);
+    } catch (error) {
+        return Promise.reject(GeneralHelper.errorResponse(error));
+    }
+};
+
 module.exports = {
     getStudentList,
     addStudent,
     updateStudent,
-    deleteStudent
+    deleteStudent,
+    loginStudent,
+    detailStudent
 };
