@@ -109,11 +109,26 @@ const loginStudent = async (request, reply) => {
 
 const getStudentByID = async (request, reply) => {
     try {
-        const dataToken = request.body.studentToken
+        const dataToken = request.body.studentToken;
+        const response = await StudentHelper.detailStudent(dataToken);
 
-        const response = await StudentHelper.detailStudent(dataToken)
         return reply.send({
             message: 'Get Detail Student Succeess!',
+            response
+        })
+    } catch (err) {
+        return reply.send(GeneralHelper.errorResponse(err));
+    }
+};
+
+const changePassword = async (request, reply) => {
+    try {
+        const { old_password, new_password, new_confirm_password } = request.body
+        const dataToken = request.body.studentToken;
+        const response = await StudentHelper.changePassword(dataToken, old_password, new_password, new_confirm_password);
+
+        return reply.send({
+            message: 'Change Password Success!',
             response
         })
     } catch (err) {
@@ -127,5 +142,6 @@ Router.delete('/delete', deleteStudent);
 Router.patch('/update', updateStudent);
 Router.post('/login', loginStudent);
 Router.get('/detail-student', Middleware.validateToken, getStudentByID);
+Router.patch('/change-password', Middleware.validateToken, changePassword)
 
 module.exports = Router;

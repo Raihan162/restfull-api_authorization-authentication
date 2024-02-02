@@ -157,11 +157,52 @@ const detailStudent = async (dataToken) => {
     }
 };
 
+const changePassword = async (dataToken, old_password, new_password, new_confirm_password) => {
+    try {
+        const checkStudent = await db.students.findOne({
+            where: {
+                id: dataToken?.id
+            }
+        });
+        if (!checkStudent) {
+            return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'))
+        };
+
+        if (!old_password || !new_password || !new_confirm_password) {
+            return Promise.reject(Boom.badRequest('PLEASE_FILL_ALL_FIELD'))
+        };
+
+        const checkPass = __comparePassword(old_password, checkStudent?.password);
+        if (!checkPass) {
+            return Promise.reject(Boom.badRequest('WRONG_OLD_PASSWORD'));
+        };
+        if(old_password === new_password){
+            return Promise.reject(Boom.badRequest('NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_THE_OLD_PASSWORD'))
+        }
+        if (new_password !== new_confirm_password) {
+            return Promise.reject(Boom.badRequest('WRONG_CONFIRM_PASSWORD'));
+        };
+
+        await db.students.update({
+            password: __hashPassword(new_password)
+        }, {
+            where: {
+                id: checkStudent?.id
+            }
+        });
+
+        await Promise.resolve(true);
+    } catch (error) {
+        return Promise.reject(GeneralHelper.errorResponse(error));
+    }
+}
+
 module.exports = {
     getStudentList,
     addStudent,
     updateStudent,
     deleteStudent,
     loginStudent,
-    detailStudent
+    detailStudent,
+    changePassword
 };
