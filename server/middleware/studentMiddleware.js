@@ -28,7 +28,7 @@ const validateToken = (request, reply, next) => {
             throw Boom.unauthorized();
         }
 
-        request.studentToken = verifiedUser
+        request.body.studentToken = verifiedUser
 
         return next();
     } catch (err) {
