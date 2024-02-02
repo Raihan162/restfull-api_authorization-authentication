@@ -19,7 +19,14 @@ module.exports = (sequelize, DataTypes) => {
   students.init({
     name: DataTypes.STRING,
     major: DataTypes.STRING,
-    contact: DataTypes.STRING
+    contact: DataTypes.STRING,
+    email: {
+      type: DataTypes.STRING,
+      validate: {
+        isEmail: true
+      }
+    },
+    password: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'students',
