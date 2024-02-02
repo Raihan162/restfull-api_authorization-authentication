@@ -144,7 +144,8 @@ const detailStudent = async (dataToken) => {
         const student = await db.students.findOne({
             where: {
                 id: dataToken.id
-            }
+            },
+            attributes: { exclude: ['password'] }
         });
         if (!student) {
             return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'))
