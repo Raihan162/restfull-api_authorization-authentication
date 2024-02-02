@@ -1,4 +1,7 @@
+const Boom = require('boom');
 const db = require('../../models/index')
+
+const GeneralHelper = require('../helpers/generalHelper');
 
 const getRegistration = async () => {
     try {
@@ -26,16 +29,17 @@ const getRegistration = async () => {
     };
 };
 
-const addRegistration = async (students_id, courses_id) => {
+const addRegistration = async (courses_id, dataToken) => {
     try {
+
         const checkStudent = await db.students.findOne({
             where: {
-                id: students_id
+                id: dataToken.id
             }
         });
 
         if (!checkStudent) {
-            throw new Error('Student doesn`t exist')
+            return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'))
         };
 
         const checkCourse = await db.courses.findOne({
@@ -45,17 +49,17 @@ const addRegistration = async (students_id, courses_id) => {
         });
 
         if (!checkCourse) {
-            throw new Error('Course doesn`t exist');
+            return Promise.reject(Boom.badRequest('COURSE_NOT_FOUND'))
         };
 
         const response = await db.registrations.create({
-            students_id: students_id,
+            students_id: checkStudent.id,
             courses_id: courses_id
         })
 
         return Promise.resolve(response);
     } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(GeneralHelper.errorResponse(error));
     };
 };
 
@@ -68,7 +72,7 @@ const deleteRegistration = async (id) => {
         });
 
         if (!checkRegistration) {
-            throw new Error('Registration doesn`t exist');
+            return Promise.reject(Boom.badRequest('REGISTRATION_NOT_FOUND'));
         };
 
         await db.registrations.destroy({
@@ -79,7 +83,7 @@ const deleteRegistration = async (id) => {
 
         return Promise.resolve([]);
     } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(GeneralHelper.errorResponse(error));
     };
 };
 
@@ -92,7 +96,7 @@ const updateRegistration = async (id, students_id, courses_id) => {
         });
 
         if (!checkRegistration) {
-            throw new Error('Registration ID doesn`t exist');
+            return Promise.reject(Boom.badRequest('REGISTRATION_NOT_FOUND'));
         };
 
         if (students_id) {
@@ -103,7 +107,7 @@ const updateRegistration = async (id, students_id, courses_id) => {
             });
 
             if (!checkStudent) {
-                throw new Error('Student doesn`t exist')
+                return Promise.reject(Boom.badRequest('STUDENT_NOT_FOUND'));
             };
         };
 
@@ -116,7 +120,7 @@ const updateRegistration = async (id, students_id, courses_id) => {
             });
 
             if (!checkCourse) {
-                throw new Error('Course doesn`t exist');
+                return Promise.reject(Boom.badRequest('COURSE_NOT_FOUND'));
             };
         };
 
@@ -131,7 +135,7 @@ const updateRegistration = async (id, students_id, courses_id) => {
 
         return Promise.resolve([]);
     } catch (error) {
-        return Promise.reject(error);
+        return Promise.reject(GeneralHelper.errorResponse(error));
     };
 };
 

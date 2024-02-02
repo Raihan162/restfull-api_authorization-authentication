@@ -2,12 +2,15 @@ const Router = require('express').Router();
 
 const Validation = require('../helpers/validationHelper');
 const RegistrationHelper = require('../helpers/registrationHelper');
+const GeneralHelper = require('../helpers/generalHelper')
+const Middleware = require('../middleware/studentMiddleware')
 
 const addRegistration = async (request, reply) => {
     try {
-        const { students_id, courses_id } = request.body;
+        const { courses_id } = request.body;
+        const dataToken = request.body.studentToken;
 
-        const response = await RegistrationHelper.addRegistration(students_id, courses_id);
+        const response = await RegistrationHelper.addRegistration(courses_id, dataToken);
 
         return reply
             .status(200)
@@ -17,11 +20,7 @@ const addRegistration = async (request, reply) => {
             });
     } catch (error) {
         return reply
-            .status(400)
-            .send({
-                message: 'Add Registration Failed!',
-                error: error?.message
-            });
+            .send(GeneralHelper.errorResponse(error));
     }
 };
 
@@ -37,11 +36,7 @@ const getRegistration = async (request, reply) => {
             });
     } catch (error) {
         return reply
-            .status(400)
-            .send({
-                message: 'Get Registration Failed!',
-                error: error?.message
-            });
+            .send(GeneralHelper.errorResponse(error));
     }
 };
 
@@ -90,7 +85,7 @@ const updateRegistration = async (request, reply) => {
     }
 };
 
-Router.post('/add', addRegistration);
+Router.post('/add', Middleware.validateToken, addRegistration);
 Router.get('/list', getRegistration);
 Router.delete('/delete', deleteRegistration);
 Router.patch('/update', updateRegistration);
